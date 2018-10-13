@@ -5,15 +5,16 @@ import sys
 import json
 import logging
 import time
+import calendar
+from datetime import datetime
 from argparse import ArgumentParser
 from util import get_url, post_and_wait
 
-def show_templates():
-    print("Available Templates:")
-    result = get_url("template-programmer/template")
-    print ('\n'.join(sorted([ '  {0}/{1}'.format(project['projectName'], project['name']) for project in result])))
-    #for project in result:
-    #    print( '{0}/{1}'.format(project['projectName'], project['name']))
+def utc_to_local(utc):
+    gmTime = time.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f+0000')
+    ### convert to localtime
+    localEpoc = calendar.timegm(gmTime)
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(localEpoc))
 
 
 def msec_to_time(msec):
@@ -28,14 +29,59 @@ def print_client_detail(data):
     print("HostType: {} connected to {}".format(conn['hostType'],conn['nwDeviceName']))
 
 def print_network_health(data):
-    print("Network Health")
+
+    try:
+        print("Network Health: {} at {}".format(data['response'][0]['healthScore'], utc_to_local(data['response'][0]['time'])))
+    except IndexError:
+        print("No data received")
+        return
+
+    format_string="{:<10s}{:<10s}{:<10s}{}"
+    print(format_string.format("Category", 'Score', 'Good%','KPI'))
+    for category in data['healthDistirubution']:
+        kpis = ['{}:{}'.format(k['key'], k['value']) for k in category['kpiMetrics'] ]
+        kpi =''
+        if kpis:
+            kpi = ','.join(kpis)
+
+        print(format_string.format(category['category'],
+                                   str(category['healthScore']),
+                                   str(category['goodPercentage']),
+                                kpi))
+
 def print_device_detail(data):
     print("Device Detail for {}".format(data['nwDeviceName']))
-    print("Health:{}, cpuScore:{}, memoryScore{}".format(data['overallHealth'],
+    print("Type:{}, OS Version:{}".format(data['nwDeviceType'],data['softwareVersion']))
+    print("Health:{}, cpuScore:{}, memoryScore:{}".format(data['overallHealth'],
                                                          data['cpuScore'],
-                                                         data['memoryScore']))
+                                                        data['memoryScore']))
+def process_score(score):
+    print(score['scoreCategory']['value'], score['clientCount'])
+    #print(score['scoreList'])
+    for entry in score['scoreList']:
+        print(" {} ({}) ".format(entry['scoreCategory']['value'], entry['clientCount']), end='')
+        #print(json.dumps(entry['scoreList'],indent=2))
+        for item in entry['scoreList']:
+            if "ALL" in item['scoreCategory']['value']:
+                continue
+            print("{}:{}({})".format(item['scoreCategory']['scoreCategory'],
+                                      item['scoreCategory']['value'],
+                                      item['clientCount']),end='')
+        print()
+
 def print_client_health(data):
-    print("Client health")
+
+
+    try:
+        start = long(client_health['response'][0]['scoreDetail'][0]['starttime'])
+    except KeyError:
+        print("No time found")
+
+    print("Client health @ {}".format(msec_to_time(start)))
+
+    for score in data[0]['scoreDetail']:
+        #print(json.dumps(score,indent=2))
+        process_score(score)
 
 def print_site_health(data):
     print("Site Health")
@@ -73,7 +119,7 @@ def print_formatted(data, israw):
                 print_site_health(body)
     except KeyError:
         print("No Valid data returned")
-
+    print('\n\n')
 
 
 
@@ -107,7 +153,14 @@ if __name__ == "__main__":
     else:
         health = get_url('dna/intent/api/v1/site-health?timestamp={}'.format(args.timestamp))
         print_formatted(health,args.raw)
-        client_health = get_url('dna/intent/api/v1/client-health?timestamp={}'.format(args.timestamp))
+
+        ## need to provide a timestamp
+        if not args.timestamp:
+            clientTimestamp = long(time.time()) * 1000
+        else:
+            clientTimestamp = args.timestamp
+
+        client_health = get_url('dna/intent/api/v1/client-health?timestamp={}'.format(clientTimestamp))
         print_formatted(client_health, args.raw)
         #start = long(client_health['response'][0]['scoreDetail'][0]['starttime'])
         #end = long(client_health['response'][0]['scoreDetail'][0]['endtime'])
