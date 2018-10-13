@@ -35,7 +35,7 @@ Some examples include
 ```
 
 The following options return client-detail and device-detail information.  Again they can be called with --raw and --timestamp
-``
+```
 #  these can also be run with --raw and --timestamp
 ./assurance.py --mac 00:26:08:E0:F4:97
 ./assurance.py --hostName 3504
