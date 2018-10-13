@@ -82,7 +82,7 @@ Network Health: 89% at 2018-10-13 16:26:00
 
  Devices Monitored 17, unMonitored 2
 Category   Score     Good%     KPI
- Access    80        80        
+ Access    60        60        MEMORY:POOR  
  Router    100       100       
  Wireless  86        85.71429  
  WLC       100       100       
