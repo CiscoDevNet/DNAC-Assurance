@@ -48,7 +48,7 @@ def print_network_health(data):
 
         print(format_string.format(' ' +category['category'],
                                    str(category['healthScore']),
-                                   str(category['goodPercentage']),
+                                   str(round(category['goodPercentage'],1)),
                                 kpi))
 
 def print_device_detail(data):
