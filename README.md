@@ -41,3 +41,52 @@ The following options return client-detail and device-detail information.  Again
 ./assurance.py --hostName 3504
 
 ```
+
+## Example
+```buildoutcfg
+$ ./assurance.py
+https://adam-dnac:443/dna/intent/api/v1/site-health?timestamp=
+Site Health
+SiteName            SiteType  Issues  RouterHealth  AccessHealth  
+ All Sites          area      None    100           80            
+NSD-5               building  None    None          None          
+ All Buildings      building  None    100           80            
+DMZ                 building  None    100           None          
+san jose            building  None    None          None          
+MEL1                building  None    None          None          
+Melbourne           area      None    None          None          
+Melbourne Campus1   area      None    None          None          
+STL-3               building  None    100           100           
+Sydney              area      None    100           100           
+
+
+https://adam-dnac:443/dna/intent/api/v1/client-health?timestamp=1539408888000
+Client health @ 2018-10-13 16:27:00 <-> 2018-10-13 16:32:00 (1539408420000-1539408720000)
+ALL 12
+WIRED 9
+ POOR (1) rootCause:AAA(1)
+ FAIR (0) 
+ GOOD (8) 
+ IDLE (0) 
+ NEW (0) 
+WIRELESS 3
+ POOR (1) rootCause:OTHER(1)
+ FAIR (0) 
+ GOOD (2) 
+ IDLE (0) 
+ NEW (0) 
+
+
+https://adam-dnac:443/dna/intent/api/v1/network-health?timestamp=
+Network Health: 89% at 2018-10-13 16:26:00
+
+ Devices Monitored 17, unMonitored 2
+Category   Score     Good%     KPI
+ Access    80        80        
+ Router    100       100       
+ Wireless  86        85.71429  
+ WLC       100       100       
+ AP        83        83.333336 
+
+
+```
