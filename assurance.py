@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import sys
 import json
 import logging
 import time
@@ -9,6 +8,9 @@ import calendar
 from datetime import datetime
 from argparse import ArgumentParser
 from util import get_url, post_and_wait
+import sys
+if sys.version_info > (3,):
+    long = int
 
 def utc_to_local(utc):
     gmTime = time.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f+0000')
@@ -31,12 +33,12 @@ def print_client_detail(data):
 def print_network_health(data):
 
     try:
-        print("Network Health: {} at {}".format(data['response'][0]['healthScore'], utc_to_local(data['response'][0]['time'])))
+        print("Network Health: {}% at {}".format(data['response'][0]['healthScore'], utc_to_local(data['response'][0]['time'])))
     except IndexError:
         print("No data received")
         return
-
-    format_string="{:<10s}{:<10s}{:<10s}{}"
+    print("\n Devices Monitored {}, unMonitored {}".format(data['monitoredDevices'], data['unMonitoredDevices']))
+    format_string="{:<11s}{:<10s}{:<10s}{}"
     print(format_string.format("Category", 'Score', 'Good%','KPI'))
     for category in data['healthDistirubution']:
         kpis = ['{}:{}'.format(k['key'], k['value']) for k in category['kpiMetrics'] ]
@@ -44,7 +46,7 @@ def print_network_health(data):
         if kpis:
             kpi = ','.join(kpis)
 
-        print(format_string.format(category['category'],
+        print(format_string.format(' ' +category['category'],
                                    str(category['healthScore']),
                                    str(category['goodPercentage']),
                                 kpi))
@@ -71,13 +73,13 @@ def process_score(score):
 
 def print_client_health(data):
 
-
     try:
         start = long(client_health['response'][0]['scoreDetail'][0]['starttime'])
+        end = long(client_health['response'][0]['scoreDetail'][0]['endtime'])
     except KeyError:
         print("No time found")
 
-    print("Client health @ {}".format(msec_to_time(start)))
+    print("Client health @ {} <-> {} ({}-{})".format(msec_to_time(start),msec_to_time(end),start,end))
 
     for score in data[0]['scoreDetail']:
         #print(json.dumps(score,indent=2))
@@ -119,7 +121,7 @@ def print_formatted(data, israw):
                 print_site_health(body)
     except KeyError:
         print("No Valid data returned")
-    print('\n\n')
+    print('\n')
 
 
 
@@ -154,7 +156,7 @@ if __name__ == "__main__":
         health = get_url('dna/intent/api/v1/site-health?timestamp={}'.format(args.timestamp))
         print_formatted(health,args.raw)
 
-        ## need to provide a timestamp
+        ## need to provide a timestamp for client-health
         if not args.timestamp:
             clientTimestamp = long(time.time()) * 1000
         else:
@@ -162,8 +164,6 @@ if __name__ == "__main__":
 
         client_health = get_url('dna/intent/api/v1/client-health?timestamp={}'.format(clientTimestamp))
         print_formatted(client_health, args.raw)
-        #start = long(client_health['response'][0]['scoreDetail'][0]['starttime'])
-        #end = long(client_health['response'][0]['scoreDetail'][0]['endtime'])
 
         network_health = get_url('dna/intent/api/v1/network-health?timestamp={}'.format(args.timestamp))
         print_formatted(network_health, args.raw)
