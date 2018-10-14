@@ -92,3 +92,17 @@ Category   Score     Good%     KPI
 
 
 ```
+
+The client detail shows a view of the topology for the client
+```buildoutcfg
+$ ./assurance.py --mac B8:27:EB:70:9F:83
+https://adam-dnac:443/dna/intent/api/v1/client-detail?timestamp=&macAddress=B8:27:EB:70:9F:83
+Client Detail for:00:F6:63:34:6A:C0 at 2018-10-14 12:11:29 (1539479489498)
+HostType: WIRELESS connected to 3804_sda
+
+10.11.200.23(None)[Linux-Workstation] - Health:1 ->
+SSID: SDA-Guest(2.4 GHZ) ->
+3804_sda:10.11.250.14:AIR-AP3802E-Z-K9(8.5.131.0) - Health:10 ->
+3504:10.10.10.147:AIR-CT3504-K9(8.5.131.0) - Health:10
+
+```
