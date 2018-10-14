@@ -1,6 +1,8 @@
 # Assurance API Test Script
 This script shows how to use the DNA Center assurance API's.
 
+DNA Center 1.2.5 is required as it has the platform API, which include Assurance.
+
 ## Installing
 If you are running python2 you will need the requests library.  If you are running and old version of the SSL library you will 
 need to update that.
@@ -10,7 +12,7 @@ pip install -r requirements.txt
 ```
 ## Running the script
 The script uses the dnac_config.py file to specify the DNA Center, username and password.
-These can also be set using environment variables too.  Run the following commands in the shell (changing the approiate values)
+These can also be set using environment variables too.  Run the following commands in the shell (changing the appropriate values)
 
 ```buildoutcfg
 export DNAC="1.1.1.1"
@@ -84,9 +86,9 @@ Network Health: 89% at 2018-10-13 16:26:00
 Category   Score     Good%     KPI
  Access    60        60        MEMORY:POOR  
  Router    100       100       
- Wireless  86        85.71429  
+ Wireless  86        85.7  
  WLC       100       100       
- AP        83        83.333336 
+ AP        83        83.3 
 
 
 ```

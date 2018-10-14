@@ -23,12 +23,48 @@ def msec_to_time(msec):
     epoc = msec /1000
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(epoc))
 
+def find_node(nodes, nodeId):
+    for node in nodes:
+        if node['id'] == nodeId:
+            return node
+    print("no node found")
+    raise KeyError("Cannot find nodeId:{}",nodeId)
+
+def print_node(node):
+    if node['role'] == 'Client':
+        return '{}({})[{}] - Health:{}'.format(node['ip'],
+                                              node['userId'],
+                                              node['deviceType'],
+                                              node['healthScore'])
+    elif node['role'] == 'SSID':
+        return 'SSID: {}({})'.format(node['name'],
+                                     node['radioFrequency'])
+    elif node['role'] == 'ACCESS':
+        return '{}:{}:{}({}) - Health:{}'.format(node['name'],
+                                                       node['ip'],
+                                                       node['platformId'],
+                                            node['softwareVersion'],
+                                             node['healthScore'])
+    else:
+        return (str(node))
+
+def print_topology(topo):
+
+    for link in topo['links']:
+        sourceNode = find_node(topo['nodes'], link['source'])
+
+        destNode = find_node(topo['nodes'], link['target'])
+
+        print('{} ->'.format(print_node(sourceNode)))
+    print(print_node(destNode))
+
 def print_client_detail(data):
     conn = data['connectionInfo']
     print("Client Detail for:{} at {} ({})".format(conn['nwDeviceMac'],
                                                    msec_to_time(conn['timestamp']),
                                                    conn['timestamp']))
-    print("HostType: {} connected to {}".format(conn['hostType'],conn['nwDeviceName']))
+    print("HostType: {} connected to {}\n".format(conn['hostType'],conn['nwDeviceName']))
+    print_topology(data['topology'])
 
 def print_network_health(data):
 
