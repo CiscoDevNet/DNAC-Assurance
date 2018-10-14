@@ -93,7 +93,8 @@ Category   Score     Good%     KPI
 
 ```
 
-The client detail shows a view of the topology for the client
+The client detail shows a view of the topology for the client.  Client is connected to "SDA-Guest" ssid, then to a 3802 AP then a 3504 WLC.
+
 ```buildoutcfg
 $ ./assurance.py --mac B8:27:EB:70:9F:83
 https://adam-dnac:443/dna/intent/api/v1/client-detail?timestamp=&macAddress=B8:27:EB:70:9F:83
