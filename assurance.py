@@ -12,6 +12,23 @@ import sys
 if sys.version_info > (3,):
     long = int
 
+    '''
+    validates the timestamp provided.  Ensures it is within 7 days of current time and provides examples.
+    :param msec:
+    :return:
+    '''
+def validate_timestamp(msec):
+    currentTime = long(time.time() * 1000)
+    # number of centiseconds 1 week ago
+    offset = 7 * 24 * 3600 * 1000
+    if msec > currentTime:
+        raise ValueError("Cannot provide a future time.  CurrentTime in milli-epoch is {}".format(currentTime))
+    if currentTime - msec > 0:
+        raise ValueError("timestamp greater than 7 days, time {}(milli-epoch)-> {}"
+                         "\n 7 days ago would be {} milli-epoch".format(msec,
+                                                            msec_to_time(msec),
+                                                            (currentTime - msec)))
+
 def utc_to_local(utc):
     gmTime = time.strptime(utc, '%Y-%m-%dT%H:%M:%S.%f+0000')
     ### convert to localtime
@@ -50,20 +67,33 @@ def print_node(node):
 
 def print_topology(topo):
 
+    destNode = None
     for link in topo['links']:
         sourceNode = find_node(topo['nodes'], link['source'])
 
         destNode = find_node(topo['nodes'], link['target'])
 
         print('{} ->'.format(print_node(sourceNode)))
-    print(print_node(destNode))
+    if destNode is not None:
+        print(print_node(destNode))
 
 def print_client_detail(data):
     conn = data['connectionInfo']
     print("Client Detail for:{} at {} ({})".format(conn['nwDeviceMac'],
                                                    msec_to_time(conn['timestamp']),
                                                    conn['timestamp']))
-    print("HostType: {} connected to {}\n".format(conn['hostType'],conn['nwDeviceName']))
+    ### new code
+    # extra WLAN info
+    if conn['hostType'] == 'WIRELESS':
+        wlan = '[protocol:{}, band:{}, channel:{}, width:{}, stream:{}]'.format(conn['protocol'],
+                                                                                conn['band'],
+                                                                                conn['channel'],
+                                                                                conn['channelWidth'],
+                                                                                conn['spatialStream'])
+    else:
+        wlan = ''
+
+    print("HostType: {} connected to {} {}\n".format(conn['hostType'],conn['nwDeviceName'], wlan))
     print_topology(data['topology'])
 
 def print_network_health(data):
@@ -123,15 +153,17 @@ def print_client_health(data):
 
 def print_site_health(data):
     print("Site Health")
-    format_string="{:<20s}{:<10s}{:<8s}{:<14s}{:<14s}"
-    print(format_string.format("SiteName","SiteType","Issues","RouterHealth", "AccessHealth"))
+    format_string="{:<20s}{:<10s}{:<8s}{:<14s}{:<14s}{:<14s}{:<14s}"
+    print(format_string.format("SiteName","SiteType","Issues","RouterHealth", "AccessHealth", "ClientHealth", "ClientCount"))
 
     for site in data:
         print(format_string.format(site['siteName'],
                                    site['siteType'],
                                    str(site['clientNumberOfIssues']),
                                    str(site['networkHealthRouter']),
-                                   str(site['networkHealthAccess'])))
+                                   str(site['networkHealthAccess']),
+                                   str(site['healthyClientsPercentage']),
+                                   str(site['numberOfClients'])))
 
 def print_formatted(data, israw):
     if israw:
@@ -180,6 +212,7 @@ if __name__ == "__main__":
 
     if args.timestamp:
         timestamp = long(args.timestamp)
+        validate_timestamp(timestamp)
         print ("Timestamp({}):{}".format(timestamp, msec_to_time(timestamp)))
 
     if args.mac:

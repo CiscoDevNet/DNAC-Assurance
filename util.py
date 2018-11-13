@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import re
+import copy
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 #from tests.fake import fake, fake_post
@@ -21,12 +22,14 @@ class DeploymentError(Exception):
 
 from dnac import get_auth_token, create_url, wait_on_task
 
-def get_url(url):
+def get_url(url, extraHeaders={}):
 
     url = create_url(path=url)
     print(url)
     token = get_auth_token()
-    headers = {'X-auth-token' : token['token'], "__runsync": "true"}
+    headers = copy.deepcopy(extraHeaders)
+    headers.update({'X-auth-token' : token['token'], "__runsync": "true"})
+
     try:
         response = requests.get(url, headers=headers, verify=False)
     except requests.exceptions.RequestException as cerror:
