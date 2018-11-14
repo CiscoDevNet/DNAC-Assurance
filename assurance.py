@@ -23,7 +23,7 @@ def validate_timestamp(msec):
     offset = 7 * 24 * 3600 * 1000
     if msec > currentTime:
         raise ValueError("Cannot provide a future time.  CurrentTime in milli-epoch is {}".format(currentTime))
-    if currentTime - msec > 0:
+    if currentTime - msec > offset:
         raise ValueError("timestamp greater than 7 days, time {}(milli-epoch)-> {}"
                          "\n 7 days ago would be {} milli-epoch".format(msec,
                                                             msec_to_time(msec),
