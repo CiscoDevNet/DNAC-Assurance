@@ -1,5 +1,5 @@
 # Assurance API Test Script
-This script shows how to use the DNA Center assurance API's.
+This script shows how to use the Cisco DNA Center assurance API's.
 
 DNA Center 1.2.5 is required as it has the platform API, which include Assurance.
 
@@ -105,5 +105,25 @@ HostType: WIRELESS connected to 3804_sda
 SSID: SDA-Guest(2.4 GHZ) ->
 3804_sda:10.11.250.14:AIR-AP3802E-Z-K9(8.5.131.0) - Health:10 ->
 3504:10.10.10.147:AIR-CT3504-K9(8.5.131.0) - Health:10
+
+```
+
+## Enrichment
+this is only enabled if the serviceNow integration bundle is selected.
+The ./enrichment.py file can be used to exercise these API.
+
+There are 4 types of enrichment
+- user: get details of the user
+- client: similar to user, but also includes issues associated with the userid/mac
+- issue: Takes an issue_id or mac_address and finds matching issues
+- device: takes an ip_address or mac_address
+
+Some examples:
+
+```buildoutcfg
+./enrichment.py --mac_address 00:26:08:E0:F4:97 --etype user
+./enrichment.py --network_user_id brad --etype client
+./enrichment.py --mac_address 00:26:08:E0:F4:97 --etype issue
+./enrichment.py --ip_address 10.10.6.2 --etype device
 
 ```
