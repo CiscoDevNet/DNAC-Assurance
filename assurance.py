@@ -8,6 +8,12 @@ import calendar
 from datetime import datetime
 from argparse import ArgumentParser
 from util import get_url, post_and_wait
+# often addresses have special chars in them
+# encoding=utf8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import sys
 if sys.version_info > (3,):
     long = int
