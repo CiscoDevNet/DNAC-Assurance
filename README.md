@@ -40,7 +40,7 @@ The following options return client-detail and device-detail information.  Again
 ```
 #  these can also be run with --raw and --timestamp
 ./assurance.py --mac 00:26:08:E0:F4:97
-./assurance.py --hostName 3504
+./assurance.py --hostName 3504_WLC
 
 ```
 

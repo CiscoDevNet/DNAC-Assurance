@@ -26,7 +26,7 @@ RETRY_INTERVAL=2
 def create_url(path, controller_ip=DNAC):
     """ Helper function to create a DNAC API endpoint URL
     """
-    if "dna/" in path:
+    if "dna/" in path or "assurance" in path:
         return "https://%s:%s/%s" % (controller_ip, DNAC_PORT, path)
     else:
         return "https://%s:%s/api/v1/%s" % (controller_ip, DNAC_PORT, path)

@@ -19,9 +19,10 @@ if __name__ == "__main__":
     parser.add_argument('--ip_address', type=str, required=False,
                         help="ip address   e.g 10.10.10.10")
     parser.add_argument('--etype', type=str, required=False, default="user",
-                        help="type - client, user, device, issue")
+                        help="type - user, client, device, issue")
     args = parser.parse_args()
 
+    extraHeaders = {}
     if args.mac_address:
         extraHeaders ={'entity_type': 'mac_address',
                    'entity_value' : args.mac_address}
@@ -31,6 +32,9 @@ if __name__ == "__main__":
     elif args.ip_address:
         extraHeaders = {'entity_type': 'ip_address',
                         'entity_value': args.ip_address}
+
+    if extraHeaders == {}:
+        raise ValueError("No MAC, IP, or networkUser provided")
 
     enrichment_data = get_url('dna/intent/api/v1/{}-enrichment-details'.format(args.etype),extraHeaders=extraHeaders)
     print (json.dumps(enrichment_data, indent=2))

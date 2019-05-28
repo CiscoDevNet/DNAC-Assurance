@@ -28,7 +28,8 @@ def get_url(url, extraHeaders={}):
     print(url)
     token = get_auth_token()
     headers = copy.deepcopy(extraHeaders)
-    headers.update({'X-auth-token' : token['token'], "__runsync": "true"})
+    #headers.update({'X-auth-token' : token['token'], "__runsync": "true"})
+    headers.update({'X-auth-token' : token['token']})
 
     try:
         response = requests.get(url, headers=headers, verify=False)
@@ -36,6 +37,19 @@ def get_url(url, extraHeaders={}):
         print("Error processing request", cerror)
         sys.exit(1)
 
+    return response.json()
+
+def post(url, data):
+    url = create_url(path=url)
+    print(url)
+    token = get_auth_token()
+    headers= {'X-auth-token' : token['token'], 'content-type' : 'application/json'}
+
+    try:
+        response = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
+    except requests.exceptions.RequestException as cerror:
+        print("Error processing request", cerror)
+        sys.exit(1)
     return response.json()
 
 def post_and_wait(url, data):

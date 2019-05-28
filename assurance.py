@@ -11,8 +11,8 @@ from util import get_url, post_and_wait
 # often addresses have special chars in them
 # encoding=utf8
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+#reload(sys)
+#sys.setdefaultencoding('utf8')
 
 import sys
 if sys.version_info > (3,):
@@ -84,22 +84,21 @@ def print_topology(topo):
         print(print_node(destNode))
 
 def print_client_detail(data):
-    conn = data['connectionInfo']
-    print("Client Detail for:{} at {} ({})".format(conn['nwDeviceMac'],
-                                                   msec_to_time(conn['timestamp']),
-                                                   conn['timestamp']))
+    detail = data['detail']
+    print("Client Detail for:{} at {} ({})".format(detail['hostMac'],
+                                                   msec_to_time(detail['lastUpdated']),
+                                                   detail['lastUpdated']))
     ### new code
     # extra WLAN info
-    if conn['hostType'] == 'WIRELESS':
-        wlan = '[protocol:{}, band:{}, channel:{}, width:{}, stream:{}]'.format(conn['protocol'],
-                                                                                conn['band'],
-                                                                                conn['channel'],
-                                                                                conn['channelWidth'],
-                                                                                conn['spatialStream'])
+    if detail['hostType'] == 'WIRELESS':
+        wlan = '[ frequency:{}, channel:{}, ssid:{}, rssi:{}]'.format(detail['frequency'],
+                                                                         detail['channel'],
+                                                                         detail['ssid'],
+                                                                         detail['rssi'])
     else:
         wlan = ''
 
-    print("HostType: {} connected to {} {}\n".format(conn['hostType'],conn['nwDeviceName'], wlan))
+    print("HostType: {} connected to {} {}\n".format(detail['hostType'],detail['hostName'], wlan))
     print_topology(data['topology'])
 
 def print_network_health(data):
@@ -113,10 +112,12 @@ def print_network_health(data):
     format_string="{:<11s}{:<10s}{:<10s}{}"
     print(format_string.format("Category", 'Score', 'Good%','KPI'))
     for category in data['healthDistirubution']:
-        kpis = ['{}:{}'.format(k['key'], k['value']) for k in category['kpiMetrics'] ]
-        kpi =''
-        if kpis:
-            kpi = ','.join(kpis)
+        #print(json.dumps(category, indent=2))
+        kpi = ''
+        if 'kpiMetrics' in category:
+            kpis = ['{}:{}'.format(k['key'], k['value']) for k in category['kpiMetrics'] ]
+            if kpis:
+                kpi = ','.join(kpis)
 
         print(format_string.format(' ' +category['category'],
                                    str(category['healthScore']),
@@ -130,18 +131,21 @@ def print_device_detail(data):
                                                          data['cpuScore'],
                                                         data['memoryScore']))
 def process_score(score):
+    #print(json.dumps(score, indent=2))
     print(score['scoreCategory']['value'], score['clientCount'])
-    #print(score['scoreList'])
-    for entry in score['scoreList']:
-        print(" {} ({}) ".format(entry['scoreCategory']['value'], entry['clientCount']), end='')
-        #print(json.dumps(entry['scoreList'],indent=2))
-        for item in entry['scoreList']:
-            if "ALL" in item['scoreCategory']['value']:
-                continue
-            print("{}:{}({})".format(item['scoreCategory']['scoreCategory'],
+    if 'scoreList' in score:
+
+        for entry in score['scoreList']:
+            print(" {} ({}) ".format(entry['scoreCategory']['value'], entry['clientCount']), end='')
+            #print(json.dumps(entry,indent=2))
+            if 'scoreList' in entry:
+                for item in entry['scoreList']:
+                    if "ALL" in item['scoreCategory']['value']:
+                        continue
+                    print("{}:{}({})".format(item['scoreCategory']['scoreCategory'],
                                       item['scoreCategory']['value'],
                                       item['clientCount']),end='')
-        print()
+            print()
 
 def print_client_health(data):
 
@@ -159,13 +163,15 @@ def print_client_health(data):
 
 def print_site_health(data):
     print("Site Health")
-    format_string="{:<20s}{:<10s}{:<8s}{:<14s}{:<14s}{:<14s}{:<14s}"
+    format_string=u"{:<20s}{:<10s}{:<8s}{:<14s}{:<14s}{:<14s}{:<14s}"
     print(format_string.format("SiteName","SiteType","Issues","RouterHealth", "AccessHealth", "ClientHealth", "ClientCount"))
 
     for site in data:
         print(format_string.format(site['siteName'],
                                    site['siteType'],
-                                   str(site['clientNumberOfIssues']),
+                                   # seems broken in 1.3
+                                   #str(site['clientNumberOfIssues']),
+                                   "0",
                                    str(site['networkHealthRouter']),
                                    str(site['networkHealthAccess']),
                                    str(site['healthyClientsPercentage']),
@@ -176,7 +182,7 @@ def print_formatted(data, israw):
         print(json.dumps(data,indent=2))
         return
     try:
-        if "connectionInfo" in data:
+        if "detail" in data:
             # client_detail
             print_client_detail(data)
         elif "latestMeasuredByEntity" in data:
@@ -193,8 +199,9 @@ def print_formatted(data, israw):
             elif 'siteType' in body[0]:
                 #site health
                 print_site_health(body)
-    except KeyError:
-        print("No Valid data returned")
+    except KeyError as e:
+        print("No Valid data returned:{}".format(e.message))
+        print(data.keys())
     print('\n')
 
 
@@ -222,10 +229,22 @@ if __name__ == "__main__":
         print ("Timestamp({}):{}".format(timestamp, msec_to_time(timestamp)))
 
     if args.mac:
-        client_detail =  get_url('dna/intent/api/v1/client-detail?timestamp={}&macAddress={}'.format(args.timestamp, args.mac))
+        # client detail needs timestamp
+        if not args.timestamp:
+            # take 5mins ago by default
+            clientTimestamp = (long(time.time()) * 1000) - 3000000
+        else:
+            clientTimestamp = args.timestamp
+        client_detail =  get_url('dna/intent/api/v1/client-detail?timestamp={}&macAddress={}'.format(clientTimestamp, args.mac))
         print_formatted(client_detail, args.raw)
     elif args.deviceName:
-        device_detail = get_url('dna/intent/api/v1/device-detail?timestamp={}&searchBy={}&identifier=nwDeviceName'.format(args.timestamp,args.deviceName))
+        # client detail needs timestamp
+        if not args.timestamp:
+            # take 5mins ago by default
+            clientTimestamp = (long(time.time()) * 1000) - 3000000
+        else:
+            clientTimestamp = args.timestamp
+        device_detail = get_url('dna/intent/api/v1/device-detail?timestamp={}&searchBy={}&identifier=nwDeviceName'.format(clientTimestamp,args.deviceName))
         print_formatted(device_detail, args.raw)
     else:
         health = get_url('dna/intent/api/v1/site-health?timestamp={}'.format(args.timestamp))
