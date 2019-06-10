@@ -18,8 +18,12 @@ if __name__ == "__main__":
                         help="network user id   e.g adam")
     parser.add_argument('--ip_address', type=str, required=False,
                         help="ip address   e.g 10.10.10.10")
-    parser.add_argument('--etype', type=str, required=False, default="user",
-                        help="type - user, client, device, issue")
+   # parser.add_argument('--etype', type=str, required=False, default="user",
+    #                    help="type - user, client, device, issue")
+    parser.add_argument('--etype',
+                        choices=['user', 'client', 'device', 'issue'],
+                        default='user',
+                        help='type of enrichment ')
     args = parser.parse_args()
 
     extraHeaders = {}
