@@ -61,9 +61,14 @@ def process_hosts(data):
                                str(host['ssid']),
                                host['linkSpeed']
                                ))
-def get_hosts(raw):
+def get_hosts(raw, wired, wireless):
     url = "api/assurance/v1/host"
-    data = post(url, data={})
+    payload = {}
+    if wired:
+        payload['filters']= {"devType": ["WIRED"]}
+    if wireless:
+        payload['filters']= {"devType": ["WIRELESS"]}
+    data = post(url, data=payload)
     if raw:
         print(json.dumps(data,indent=2))
     else:
@@ -75,10 +80,14 @@ if __name__ == "__main__":
 
     parser.add_argument('--raw', action='store_true',
                         help="raw json")
+    parser.add_argument('--wired', action='store_true',
+                        help="wired clients only")
+    parser.add_argument('--wireless', action='store_true',
+                        help="wireless clients only")
     parser.add_argument('-v', action='store_true',
                         help="verbose")
     args = parser.parse_args()
     if args.v:
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    get_hosts(args.raw)
+    get_hosts(args.raw, args.wired, args.wireless)
