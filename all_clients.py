@@ -48,7 +48,7 @@ def msec_to_time(msec):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(epoc))
 
 def process_hosts(data):
-    formatstr = '{:20s}{:10s}{:15s}{:10s}{:16s}{:20s}{:10s}{}'
+    formatstr = '{:20s}{:10s}{:15s}{:10s}{:16s}{:20s}{:10s}{:15s}'
     print(formatstr.format("id","Host Type","Host Name", "Health", "IP Address", "Location", "SSID","Link Speed"))
 
     for host in data:
@@ -57,17 +57,25 @@ def process_hosts(data):
                                str(host['hostName']),
                                str(host['healthScore'][0]['score']),
                                str(host['hostIpV4']),
-                               host['location'],
+                               str(host.get('location',"na")),
                                str(host['ssid']),
-                               host['linkSpeed']
+                               str(host.get('linkSpeed','n/a'))
                                ))
 def get_hosts(raw, wired, wireless):
     url = "api/assurance/v1/host"
+    # add timestamp
+    epoch = int (time.time())
+    end = (epoch * 1000) - 10000
+    start = end - 30000
+    
     payload = {}
+    payload['starttime'] = start
+    payload['endtime'] = end
     if wired:
         payload['filters']= {"devType": ["WIRED"]}
     if wireless:
         payload['filters']= {"devType": ["WIRELESS"]}
+    logging.debug(json.dumps(payload))
     data = post(url, data=payload)
     if raw:
         print(json.dumps(data,indent=2))
